@@ -1,4 +1,5 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, Response
+from typing import Dict
 import requests
 
 app = Flask(__name__)
@@ -14,15 +15,18 @@ def hello_world():
 # and list of episodes (with episode information)
 @app.get("/podcast")
 def get_podcasts():
-    url = request.json.__dict__.get('url', '')
-
+    req = request.json 
+    if req and isinstance(req, Dict):
+        url = req.get('url', '')
+    else:
+        url = None
+    
     if not url:
-        # TODO send appropriate status codes
-        return "Please send a url of a podcast feed"
+        return Response("Please send a url of a podcast feed", 400)
     
     # TODO use url to get podcast info
 
-    return 'Here is your podcast infor'
+    return f'Here is your podcast information: {url}', 200
 
 if __name__ == "__main__":
     app.run()

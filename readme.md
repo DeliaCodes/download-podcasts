@@ -22,4 +22,8 @@
 - able to take in multiple podcast feeds
 - pytest testing setup
 
+# Development
+To test the flask locally use:
+`flask --app src.app.index --debug run`
+
 
