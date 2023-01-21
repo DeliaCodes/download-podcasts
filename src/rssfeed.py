@@ -1,4 +1,3 @@
-from turtle import pu
 import feedparser
 import shutil
 from typing import Optional

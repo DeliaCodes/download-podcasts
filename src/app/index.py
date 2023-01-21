@@ -1,6 +1,9 @@
+import json
 from flask import Flask, jsonify, request, Response
 from typing import Dict
-import requests
+
+
+from ..core import get_podcast_episodes
 
 app = Flask(__name__)
 
@@ -24,9 +27,14 @@ def get_podcasts():
     if not url:
         return Response("Please send a url of a podcast feed", 400)
     
-    # TODO use url to get podcast info
+    info = get_podcast_episodes(url)
 
-    return f'Here is your podcast information: {url}', 200
+    response = {
+        'message': f'Here is your podcast information from {url}',
+        'data': info,
+    }
+
+    return Response(json.dumps(response), 200)
 
 if __name__ == "__main__":
     app.run()
