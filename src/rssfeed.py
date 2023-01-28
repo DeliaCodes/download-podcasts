@@ -1,10 +1,7 @@
-import feedparser
 import shutil
 from typing import Optional
 import podcastparser
-from io import StringIO
-from html.parser import HTMLParser
-import urllib
+import urllib.request
 from os import path, makedirs
 import re
 import requests
@@ -75,7 +72,7 @@ class RssFeed():
             # print("~~~~~~~~~~~~~~~~~~~~~~~~~~~EP~~~~~~~~~~~~~~~~~~~~~~",pp.pprint(ep))
             possible_enclosures = ep.get("enclosures", None)
             
-            published = self._get_date_if_any(ep)
+            published = self.__get_date_if_any(ep)
 
             if ep["title"]:
                 found_filename = f"{ep['title']}"
@@ -85,7 +82,7 @@ class RssFeed():
               found_filename = " No Name Found %d " % (ep_count)
 
             if published:
-              found_filename = found_filename + "_" + f"{published.date()}" 
+              found_filename = found_filename + "_" + f"{published}" 
             
             filename = self.__sanitize_filename(found_filename)
              
@@ -125,13 +122,13 @@ class RssFeed():
   
   # NOTE PRIVATE METHODS BELOW
 
-  def _get_date_if_any(self, ep: dict) -> Optional[str]:
+  def __get_date_if_any(self, ep: dict) -> Optional[str]:
     maybe_published = ep.get("pubished", None)
     published = None
-
+    format = '%a, %d %b %Y %H:%M:%S %z'
     # TODO need to handle different ways of finding the time
     if maybe_published:
-      published = datetime.datetime.strptime(maybe_published, '%a, %d %b %Y %H:%M:%S %z')
+      published = datetime.datetime.strftime(datetime.datetime.strptime(maybe_published, format), format)
     
     return published
 
@@ -152,7 +149,7 @@ class RssFeed():
       audio_formats = ["3gp", "aac", "act", "aiff", "alac", "amr", "flac", "m4a", "m4b", "mp3", "mp4", "mpc", "mogg", "oga", "ogg", "tta", "wav", "wv"]
       valid_extensions_regex = ""
       for ext in audio_formats:
-        valid_extensions_regex = valid_extensions_regex + "\." + str(ext) + "$|"
+        valid_extensions_regex = valid_extensions_regex + r"\." + str(ext) + "$|"
       
       valid_extensions_regex = valid_extensions_regex[:-1]
 
@@ -191,34 +188,37 @@ class RssFeed():
       return ending
   
   def __remove_feed_from_url(self, url: str) -> str:
-    if url:
-      try:
-        conv_url = str(url)
+    if not url:
+      print('[RssFeed].__remove_feed_from_url - url is falsey')
+      return ''
 
-        check_for_feed = conv_url[0:4].lower()
-       # print("FEED", check_for_feed)
-        if check_for_feed == 'feed':
-          new_url = url[5:]
-          # print('NEW URL', new_url)
-          return str(new_url)
-        else:
-          return url
-      except Exception as error:
-        print('[RssFeed].__remove_feed_from_url - error', error)
-        raise Exception(error)
+    try:
+      conv_url = str(url)
+      check_for_feed = conv_url[0:4].lower()
+      # print("FEED", check_for_feed)
+      if check_for_feed == 'feed':
+        new_url = url[5:]
+        # print('NEW URL', new_url)
+        return str(new_url)
+      else:
+        return url
+    except Exception as error:
+      print('[RssFeed].__remove_feed_from_url - error', error)
+      return url
+    
   
   def __sanitize_filename(self, filename: str) -> str:
     if filename:
       try:
         orig_filename = str(filename)
         first_name= re.sub(r'[\'!;,:"\\/]', '', orig_filename, flags=re.IGNORECASE)
-        updated_filename = re.sub('\.(?=.*\.)', '', first_name, flags=re.IGNORECASE)
+        updated_filename = re.sub(r'\.(?=.*\.)', '', first_name, flags=re.IGNORECASE)
         
         return updated_filename
 
       except Exception as error:
         # print('[RssFeed].__sanitize_filename', error)
-        raise Exception('[RssFeed].__sanitize_filename' + error)
+        raise Exception(f'[RssFeed].__sanitize_filename: {error}')
     else:
       raise Exception('[RssFeed].__sanitize_filename - filename not found')
 
