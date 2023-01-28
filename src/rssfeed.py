@@ -1,5 +1,5 @@
 import shutil
-from typing import Optional
+from typing import Optional, Dict
 import podcastparser
 import urllib.request
 from os import path, makedirs
@@ -16,7 +16,27 @@ class RssFeed():
   def __init__(self, downloads_path = "downloads"):
     self.downloads_path = downloads_path
 
-  def main(self):
+  
+  def parse(self, feed:str) -> Dict:
+    removed_feed = self.__remove_feed_from_url(feed)
+
+    # TODO restore this Check if feed is valid URL
+      # parsedUrl = urlparse(removed_feed)
+
+      # # Check to see if parsedUrl.scheme, parsedUrl.netloc and parsedUrl.path have values
+      # if parsedUrl.scheme == "" or parsedUrl.netloc == "" or parsedUrl.path == "":
+      #   # if not, throw an exception
+      #   raise Exception("Invalid URL: %s parsed is %s scheme is %s netloc is %s path is %s" % (feed, parsedUrl, parsedUrl.scheme, parsedUrl.netloc, parsedUrl.path))
+
+      # print("URLLIB",  urllib.request.urlopen(removed_feed))
+    try:
+      parsedFromParser = podcastparser.parse(removed_feed, urllib.request.urlopen(removed_feed))
+      return parsedFromParser
+    except Exception as e:
+      print('Parsing error occurred', e)
+      raise Exception(f"Parsing error: {e}")
+
+  def download(self):
     try:
       # Check to see if downloads directory exists
       
@@ -35,19 +55,7 @@ class RssFeed():
       # feed = "http://joeroganexp.joerogan.libsynpro.com/rss"
       title = input('Enter the Podcast name: ')
       feed = input("Enter the feed xml url (e.g. http://podcastdomain.com/path/to/file.xml and not feed:http://): ")
-
-      removed_feed = self.__remove_feed_from_url(feed)
-
-      # TODO restore this Check if feed is valid URL
-      # parsedUrl = urlparse(removed_feed)
-
-      # # Check to see if parsedUrl.scheme, parsedUrl.netloc and parsedUrl.path have values
-      # if parsedUrl.scheme == "" or parsedUrl.netloc == "" or parsedUrl.path == "":
-      #   # if not, throw an exception
-      #   raise Exception("Invalid URL: %s parsed is %s scheme is %s netloc is %s path is %s" % (feed, parsedUrl, parsedUrl.scheme, parsedUrl.netloc, parsedUrl.path))
-
-      # print("URLLIB",  urllib.request.urlopen(removed_feed))
-      parsedFromParser = podcastparser.parse(removed_feed, urllib.request.urlopen(removed_feed))
+      parsedFromParser = self.parse(feed) 
 
       # Get the Channel Title
       channelTitlePath = self.downloads_path + "/" + title
@@ -227,4 +235,6 @@ if __name__ == "__main__":
   new_path = "downthemall"
   rss = RssFeed(new_path)
   # rss = RssFeed()
-  rss.main()
+  rss.download()
+  # rss.parse()
+  
