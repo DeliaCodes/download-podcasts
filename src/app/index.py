@@ -2,7 +2,6 @@ import json
 from flask import Flask, jsonify, request, Response
 from typing import Dict
 
-
 from ..core import get_podcast_episodes
 
 app = Flask(__name__)
@@ -27,14 +26,22 @@ def get_podcasts():
     if not url:
         return Response("Please send a url of a podcast feed", 400)
     
-    info = get_podcast_episodes(url)
+    try:
+    
+        info = get_podcast_episodes(url)
 
-    response = {
-        'message': f'Here is your podcast information from {url}',
-        'data': info,
-    }
+        response = {
+            'message': f'Here is your podcast information from {url}',
+            'data': info,
+        }
 
-    return Response(json.dumps(response), 200)
+        return Response(json.dumps(response), 200)
+    except Exception as error:
+        e = f"An error was encountered when processing your request - {error}"
+        args = {
+            "msg": e,
+        }
+        return Response(json.dumps(args), 400)
 
 if __name__ == "__main__":
     app.run()
